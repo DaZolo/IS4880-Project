@@ -33,7 +33,8 @@
    ```bat
    python app.py
    ```
-
+   (Ensure the command prompt is opened in the folder of the project.)
+   
 5. **Open in your browser**
    Go to:
 

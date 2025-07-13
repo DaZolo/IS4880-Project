@@ -1,4 +1,4 @@
-````markdown
+
 # Alumni Engagement Platform
 
 ## Prerequisites
@@ -13,7 +13,7 @@
    ```bat
    git clone https://github.com/your‑username/alumni‑engagement.git
    cd alumni‑engagement
-````
+   ```
 
 2. **Initialize the database**
    Run the provided batch script to create the `alumni_db` database and all required tables:

@@ -6,3 +6,5 @@ werkzeug
 pymysql
 pandas
 openpyxl
+cryptography
+sqlalchemy

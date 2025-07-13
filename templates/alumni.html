@@ -1,0 +1,75 @@
+<!-- File: templates/alumni.html -->
+
+{% extends 'base.html' %}
+{% block title %}Alumni Directory{% endblock %}
+
+{% block content %}
+<h1>KSU Alumni Directory</h1>
+
+<form method="GET" class="filter-form">
+  <label for="name">Name:</label>
+  <input type="text" id="name" name="name" value="{{ name_query }}">
+
+  <label for="year_from">Grad Year From:</label>
+  <input type="number" id="year_from" name="year_from" value="{{ year_from }}">
+
+  <label for="year_to">to</label>
+  <input type="number" id="year_to" name="year_to" value="{{ year_to }}">
+
+  <label for="major">Major:</label>
+  <select id="major" name="major">
+    <option value="">All</option>
+    {% for m in majors %}
+      <option value="{{ m }}" {% if m == major_query %}selected{% endif %}>{{ m }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">Search</button>
+</form>
+
+{% if alumni_list %}
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>First</th><th>Last</th><th>Phone</th>
+      <th>Major</th><th>Grad Year</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in alumni_list %}
+    <tr>
+      <td>{{ a.alumniID }}</td>
+      <td>{{ a.fName }}</td>
+      <td>{{ a.lName }}</td>
+      <td>{{ a.phone }}</td>
+      <td>{{ a.degrees[0].major if a.degrees else '' }}</td>
+      <td>{{ a.degrees[0].graduationDT.year if a.degrees else '' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if pagination.pages > 1 %}
+<nav class="pagination">
+  {% for p in range(1, pagination.pages+1) %}
+    {% if p == pagination.page %}
+      <span class="current">{{ p }}</span>
+    {% else %}
+      <a
+        href="{{ url_for('alumni_directory',
+                         page=p,
+                         name=name_query,
+                         year_from=year_from,
+                         year_to=year_to,
+                         major=major_query) }}"
+      >{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+</nav>
+{% endif %}
+
+{% else %}
+<p>No alumni found matching those criteria.</p>
+{% endif %}
+
+{% endblock %}

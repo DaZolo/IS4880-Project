@@ -1,0 +1,30 @@
+<!-- File: templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  {% if current_user.is_authenticated %}
+  <nav class="nav-links">
+    <a href="{{ url_for('alumni_directory') }}">
+      <img src="{{ url_for('static', filename='images/ksu.png') }}"
+           alt="KSU" title="KSU" height="50" />
+    </a>
+    <a href="{{ url_for('alumni_directory') }}">ALUMNI DIRECTORY</a>
+    <!-- Fixed: point at the actual endpoint name -->
+    <a href="{{ url_for('education_employment_page') }}">EDUCATION &amp; EMPLOYMENT</a>
+    <a href="{{ url_for('donations_page') }}">DONATIONS</a>
+    <a href="{{ url_for('newsletter_page') }}">NEWSLETTER</a>
+    <a href="{{ url_for('engagement_page') }}">ENGAGEMENT</a>
+    <a href="{{ url_for('logout') }}">LOGOUT</a>
+  </nav>
+  {% endif %}
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

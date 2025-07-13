@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Newsletter Engagement{% endblock %}
+{% block content %}
+<h1>Newsletter Engagement Metrics</h1>
+
+<!-- Filter Form -->
+<form method="GET" class="filter-form">
+  <label for="start">Date From:</label>
+  <input type="date" id="start" name="start" value="{{ start }}">
+  <label for="end">to</label>
+  <input type="date" id="end" name="end" value="{{ end }}">
+  <label for="headline">Headline Contains:</label>
+  <input type="text" id="headline" name="headline" value="{{ headline_query }}">
+  <button type="submit">Filter</button>
+</form>
+
+<table id="engagementTable">
+  <thead>
+    <tr>
+      <th>Newsletter ID</th>
+      <th>Headline</th>
+      <th>Date</th>
+      <th># Recipients</th>
+      <th># Clicks</th>
+      <th>Click Rate (%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for rec in engagements %}
+    <tr>
+      <td>{{ rec.newsletterID }}</td>
+      <td>{{ rec.newsletter.headline if rec.newsletter else "" }}</td>
+      <td>{{ rec.date.strftime("%Y-%m-%d") }}</td>
+      <td>{{ rec.recipients }}</td>
+      <td>{{ rec.clicks }}</td>
+      <td>{{ rec.recipients and rec.recipients > 0 and ((rec.clicks/rec.recipients*100) | round(1)) ~ '%' or '0.0%' }}</td>
+    </tr>
+    {% endfor %}
+    {% if engagements|length == 0 %}
+      <tr><td colspan="6" style="text-align:center;">No engagement records found for the selected filters.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+{% endblock %}

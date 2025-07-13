@@ -1,0 +1,57 @@
+<!-- File: templates/newsletter.html -->
+{% extends 'base.html' %}
+{% block title %}Newsletter{% endblock %}
+{% block content %}
+<h1>Newsletter Submission Dashboard</h1>
+
+<section>
+  <h2>Recent Newsletters</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Headline</th>
+        <th>Date</th>
+        <th>Subject</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if articles|length == 0 %}
+        <tr><td colspan="3" style="text-align:center;">No newsletters yet.</td></tr>
+      {% else %}
+        {% for n in articles %}
+          <tr>
+            <td>{{ n.headlines }}</td>
+            <td>{{ n.date }}</td>
+            <td>{{ n.subject }}</td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Create & Send Newsletter</h2>
+  <form method="POST">
+    <article>
+      {{ csrf_token() }}
+      <label for="headlines">Headline:</label>
+      <input type="text" id="headlines" name="headlines" required>
+      
+      <label for="subject">Subject:</label>
+      <input type="text" id="subject" name="subject" required>
+      
+      <label for="body">Content:</label>
+      <textarea id="body" name="body" rows="4" required></textarea>
+      
+      <label for="recipient_group">Recipients:</label>
+      <select id="recipient_group" name="recipient_group">
+        <option value="subscribed">Subscribed Alumni</option>
+        <option value="all">All Alumni</option>
+      </select>
+      
+      <input type="submit" value="Send Newsletter">
+    </article>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Login - Alumni Platform{% endblock %}
+{% block content %}
+<header>
+    <h1>KSU Login</h1>
+    <img src="{{ url_for('static', filename='images/ksu.png') }}" alt="KSU" title="KSU" height="400">
+    <h2>Welcome, KSU Alumni!</h2>
+</header>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <p style="color:red; text-align:center;">{{ messages[0] }}</p>
+  {% endif %}
+{% endwith %}
+<form action="{{ url_for('login') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <input type="submit" value="Login">
+</form>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Education &amp; Employment{% endblock %}
+{% block content %}
+<h1>Alumni Education &amp; Employment Report</h1>
+
+<form method="GET" class="filter-form">
+  <label for="yearFrom">Graduation Year From:</label>
+  <input type="number" id="yearFrom" name="yearFrom" value="{{ year_from }}">
+  <label for="yearTo">to</label>
+  <input type="number" id="yearTo" name="yearTo" value="{{ year_to }}">
+  <label for="degree">Degree Type:</label>
+  <select id="degree" name="degree">
+    <option value="" {% if degree_type == "" %}selected{% endif %}>All</option>
+    <option value="Bachelors" {% if degree_type == "Bachelors" %}selected{% endif %}>Bachelors</option>
+    <option value="Masters" {% if degree_type == "Masters" %}selected{% endif %}>Masters</option>
+    <option value="PhD" {% if degree_type == "PhD" %}selected{% endif %}>PhD</option>
+  </select>
+  <br>
+  <label for="employmentStart">Employment Start From:</label>
+  <input type="date" id="employmentStart" name="employmentStart" value="{{ emp_start_from }}">
+  <label for="employmentEnd">to</label>
+  <input type="date" id="employmentEnd" name="employmentEnd" value="{{ emp_start_to }}">
+  <label for="currentYN">Current Employment:</label>
+  <select id="currentYN" name="currentYN">
+    <option value="" {% if current_filter == "" %}selected{% endif %}>Any</option>
+    <option value="Y" {% if current_filter == "Y" %}selected{% endif %}>Current Only</option>
+    <option value="N" {% if current_filter == "N" %}selected{% endif %}>Past Only</option>
+  </select>
+  <button type="submit">Filter</button>
+</form>
+
+{% if grouped_data|length == 0 %}
+<p>No alumni found with multiple employments for the selected filters.</p>
+{% else %}
+  {% for alum, jobs in grouped_data %}
+  <h2>{{ alum.fName }} {{ alum.lName }}</h2>
+  <ul>
+    {% for job in jobs %}
+      <li>{{ job.company }} – {{ job.jobTitle }} ({{ job.startDate }} to {{ job.endDate if job.endDate else "Current" }})</li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+{% endif %}
+{% endblock %}

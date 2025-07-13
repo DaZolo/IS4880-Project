@@ -1,0 +1,154 @@
+# File: app.py
+import os
+import sys
+import time
+from datetime import datetime, timedelta
+
+# Allow this script (running as __main__) to be imported as "app" by your models
+sys.modules['app'] = sys.modules[__name__]
+
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, flash, session, abort, jsonify
+)
+from flask_login import (
+    LoginManager, login_user, logout_user,
+    login_required, current_user
+)
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+
+# Initialize Flask app
+app = Flask(__name__)
+
+# Configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'supersecretkey')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL',
+    'mysql+pymysql://alumni_user:StrongPassword!@localhost/alumni_db'
+)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Security settings for session cookies
+app.config['SESSION_COOKIE_SECURE']   = True   # HTTPS only in production
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# File upload config
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'images')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Session timeout (30 minutes of inactivity)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+
+# Initialize DB & CSRF
+from models.db import db
+db.init_app(app)
+csrf = CSRFProtect(app)
+app.jinja_env.globals['csrf_token'] = generate_csrf
+
+# Flask-Login
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Load user by ID for Flask-Login."""
+    from models.user import User
+    try:
+        return User.query.get(int(user_id))
+    except:
+        return None
+
+def admin_required(func):
+    """Decorator to restrict routes to admin users only."""
+    from functools import wraps
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated or getattr(current_user, 'role', '') != 'admin':
+            abort(403)
+        return func(*args, **kwargs)
+    return wrapper
+
+@app.before_request
+def make_session_permanent():
+    """Refresh session timeout; logout if inactive too long."""
+    session.permanent = True
+    if current_user.is_authenticated:
+        last_active = session.get('last_active')
+        now = datetime.utcnow()
+        if last_active:
+            try:
+                last_dt = datetime.fromisoformat(last_active)
+            except:
+                last_dt = now
+            if now - last_dt > app.config['PERMANENT_SESSION_LIFETIME']:
+                logout_user()
+                session.clear()
+                flash('Session timed out due to inactivity. Please log in again.', 'warning')
+                return redirect(url_for('login'))
+        session['last_active'] = now.isoformat()
+
+@app.route('/', methods=['GET'])
+def home():
+    """Root → login or alumni directory."""
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    return redirect(url_for('alumni_directory'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Login form and authentication."""
+    from models.user import User
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = None
+
+        if username:
+            if username.isdigit():
+                user = User.query.get(int(username))
+            if not user:
+                # match by first or last name
+                user = User.query.filter(
+                    (User.fName == username) |
+                    (User.lName == username)
+                ).first()
+
+        if not user or not check_password_hash(user.password, password):
+            flash('Invalid credentials. Please try again.', 'danger')
+            return render_template('login.html')
+
+        login_user(user)
+        session.permanent = True
+        flash(f'Welcome, {user.fName}!', 'success')
+        return redirect(url_for('alumni_directory'))
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Log out current user."""
+    logout_user()
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
+# Register all models & their routes
+import models.address
+import models.alumni
+import models.degree
+import models.donation
+import models.employment
+import models.engagement
+import models.newsletter
+import models.sentto
+import models.skillset
+import models.user
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

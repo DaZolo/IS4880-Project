@@ -34,7 +34,6 @@ class Alumni(db.Model):
     skillsets   = db.relationship('Skillset',   back_populates='alumni', lazy=True)
     donations   = db.relationship('Donation',   back_populates='alumni', lazy=True)
     sentto      = db.relationship('SentTo',     back_populates='alumni', lazy=True)
-    engagements = db.relationship('Engagement', back_populates='alumni', lazy=True)
 
     def __repr__(self):
         return f'<Alumni {self.alumniID}: {self.fName} {self.lName}>'

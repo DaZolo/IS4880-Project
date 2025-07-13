@@ -12,7 +12,8 @@ from models.degree import Degree
 class Employment(db.Model):
     __tablename__ = 'employment'
 
-    empID      = db.Column(db.Integer, primary_key=True)
+    # Map the Python attribute empID to the EID column in the database
+    empID      = db.Column('EID', db.Integer, primary_key=True)
     alumniID   = db.Column(db.Integer, db.ForeignKey('alumni.alumniID'))
     company    = db.Column(db.String(255))
     jobTitle   = db.Column(db.String(100))
@@ -30,7 +31,7 @@ class Employment(db.Model):
 @login_required
 @admin_required
 def education_employment_page():
-    """Report 2: Education & Employment — alumni with 2+ jobs under applied filters."""
+    """Education & Employment Report"""
     # Gather filter parameters
     year_from  = request.args.get('yearFrom', '').strip()
     year_to    = request.args.get('yearTo',   '').strip()
@@ -65,14 +66,14 @@ def education_employment_page():
     if current_yn == 'Y':
         q = q.filter(Employment.endDate.is_(None))
 
-    # Execute, order and group by alumni
+    # Execute the query and group jobs by alumni
     rows = q.order_by(Alumni.lName, Employment.startDate).all()
     grouped = {}
     for alum, job in rows:
         grouped.setdefault(alum, []).append(job)
 
-    # Only keep alumni with 2+ employments
-    grouped_data = [(alum, jobs) for alum, jobs in grouped.items() if len(jobs) > 1]
+    # Show all alumni regardless of number of employments
+    grouped_data = [(alum, jobs) for alum, jobs in grouped.items()]
 
     return render_template(
         'educationemployment.html',

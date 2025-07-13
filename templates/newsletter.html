@@ -16,7 +16,9 @@
     </thead>
     <tbody>
       {% if articles|length == 0 %}
-        <tr><td colspan="3" style="text-align:center;">No newsletters yet.</td></tr>
+        <tr>
+          <td colspan="3" style="text-align:center;">No newsletters yet.</td>
+        </tr>
       {% else %}
         {% for n in articles %}
           <tr>
@@ -31,25 +33,25 @@
 </section>
 
 <section>
-  <h2>Create & Send Newsletter</h2>
-  <form method="POST">
+  <h2>Compose a New Newsletter</h2>
+  <form method="POST" action="{{ url_for('newsletter_page') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <article>
-      {{ csrf_token() }}
       <label for="headlines">Headline:</label>
       <input type="text" id="headlines" name="headlines" required>
-      
+
       <label for="subject">Subject:</label>
       <input type="text" id="subject" name="subject" required>
-      
+
       <label for="body">Content:</label>
       <textarea id="body" name="body" rows="4" required></textarea>
-      
+
       <label for="recipient_group">Recipients:</label>
       <select id="recipient_group" name="recipient_group">
         <option value="subscribed">Subscribed Alumni</option>
         <option value="all">All Alumni</option>
       </select>
-      
+
       <input type="submit" value="Send Newsletter">
     </article>
   </form>

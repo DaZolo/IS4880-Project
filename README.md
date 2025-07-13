@@ -25,7 +25,7 @@
 3. **Install Python dependencies**
 
    ```bat
-   pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    ```
 
 4. **Start the Flask server**

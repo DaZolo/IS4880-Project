@@ -32,7 +32,7 @@ def engagement_page():
 
     from models.newsletter import Newsletter
 
-    q = Engagement.query
+    q = Engagement.query.join(Newsletter)
     if start:
         try:
             q = q.filter(Engagement.date >= datetime.fromisoformat(start))
@@ -43,6 +43,8 @@ def engagement_page():
             q = q.filter(Engagement.date <= datetime.fromisoformat(end))
         except ValueError:
             flash('Invalid end date; use YYYY-MM-DD', 'warning')
+    if headline_query:
+        q = q.filter(Newsletter.headlines.ilike(f'%{headline_query}%'))
     existing_engs = q.order_by(Engagement.date.desc()).all()
 
     eng_ids = {e.newsletterID for e in existing_engs}
@@ -58,13 +60,13 @@ def engagement_page():
             news_q = news_q.filter(Newsletter.date <= datetime.fromisoformat(end).date())
         except ValueError:
             pass
+    if headline_query:
+        news_q = news_q.filter(Newsletter.headlines.ilike(f'%{headline_query}%'))
     newsletters = news_q.all()
 
     missing_engs = []
     for nl in newsletters:
         if nl.newsletterID in eng_ids:
-            continue
-        if headline_query and headline_query.lower() not in nl.headlines.lower():
             continue
         fake = Engagement(
             newsletterID = nl.newsletterID,
@@ -74,6 +76,7 @@ def engagement_page():
         )
         fake.newsletter = nl
         missing_engs.append(fake)
+
     all_engs = existing_engs + missing_engs
     all_engs.sort(key=lambda e: e.date, reverse=True)
 
@@ -96,7 +99,7 @@ def engagement_api():
 
     from models.newsletter import Newsletter
 
-    q = Engagement.query
+    q = Engagement.query.join(Newsletter)
     if start:
         try:
             q = q.filter(Engagement.date >= datetime.fromisoformat(start))
@@ -112,12 +115,11 @@ def engagement_api():
             q = q.filter(Engagement.newsletterID == int(nid))
         except ValueError:
             pass
+    if headline_query:
+        q = q.filter(Newsletter.headlines.ilike(f'%{headline_query}%'))
 
     results = []
     for rec in q.order_by(Engagement.date.desc()).all():
-        # Filter by headline if provided
-        if headline_query and headline_query.lower() not in rec.newsletter.headlines.lower():
-            continue
         rate = rec.clicks / rec.recipients * 100 if rec.recipients else 0
         results.append({
             'newsletterID': rec.newsletterID,

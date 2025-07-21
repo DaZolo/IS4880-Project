@@ -3,7 +3,6 @@
 {% block content %}
 <h1>Newsletter Engagement Metrics</h1>
 
-<!-- Filter Form -->
 <form method="GET" class="filter-form">
   <label for="start">Date From:</label>
   <input type="date" id="start" name="start" value="{{ start }}">
@@ -29,7 +28,7 @@
     {% for rec in engagements %}
     <tr>
       <td>{{ rec.newsletterID }}</td>
-      <td>{{ rec.newsletter.headline if rec.newsletter else "" }}</td>
+      <td>{{ rec.newsletter.headlines if rec.newsletter else "" }}</td>
       <td>{{ rec.date.strftime("%Y-%m-%d") }}</td>
       <td>{{ rec.recipients }}</td>
       <td>{{ rec.clicks }}</td>

@@ -1,5 +1,3 @@
-# File: models/newsletter.py
-
 from datetime import datetime
 from flask import render_template, request, flash, redirect, url_for
 from flask_login import login_required
@@ -11,16 +9,12 @@ from models.engagement import Engagement
 from sqlalchemy import Column, Integer, String, Date, Text
 
 class Newsletter(db.Model):
-    __tablename__ = 'newsLetter'  # matches the MySQL table name
-
-    # map attributes to actual column names
+    __tablename__ = 'newsLetter'
     newsletterID = Column('id',            Integer, primary_key=True)
     date         = Column('newsDate',      Date,    nullable=False)
     headlines    = Column('headline',      String(255), nullable=False)
     subject      = Column('category',      String(50),  nullable=False)
     body         = Column('content',       Text,   nullable=False)
-
-    # relationships (back_populates must match attribute names in SentTo & Engagement)
     recipients   = db.relationship('SentTo',     back_populates='newsletter', lazy=True)
     engagements  = db.relationship('Engagement', back_populates='newsletter', lazy=True)
 
@@ -31,15 +25,11 @@ class Newsletter(db.Model):
 @login_required
 @admin_required
 def newsletter_page():
-    """Newsletter Report"""
     if request.method == 'POST':
-        # collect form data
         headlines = request.form.get('headlines', '').strip()
         subject   = request.form.get('subject',   '').strip()
         body      = request.form.get('body',      '').strip()
         date_str  = request.form.get('date') or datetime.utcnow().date().isoformat()
-
-        # create and flush new newsletter record
         nl = Newsletter(
             headlines = headlines,
             subject   = subject,
@@ -49,14 +39,12 @@ def newsletter_page():
         db.session.add(nl)
         db.session.flush()
 
-        # determine recipients
         choice = request.form.get('recipient_group')
         if choice == 'all':
             targets = Alumni.query.all()
         else:
             targets = Alumni.query.filter(Alumni.newsLetterYN == 'Y').all()
 
-        # seed SentTo records
         for alum in targets:
             record = SentTo(
                 newsletterID = nl.newsletterID,
@@ -66,10 +54,24 @@ def newsletter_page():
             )
             db.session.add(record)
 
+        eng = Engagement(
+            newsletterID = nl.newsletterID,
+            date         = datetime.utcnow().date(),
+            recipients   = len(targets),
+            clicks       = 0
+        )
+        db.session.add(eng)
+
         db.session.commit()
         flash(f'Newsletter "{headlines}" sent to {len(targets)} alumni.', 'success')
         return redirect(url_for('newsletter_page'))
 
-    # GET: display form + last five newsletters
     recent = Newsletter.query.order_by(Newsletter.date.desc()).limit(5).all()
     return render_template('newsletter.html', articles=recent)
+
+@app.route('/newsletter/<int:nid>', endpoint='newsletter_detail', methods=['GET'])
+@login_required
+@admin_required
+def newsletter_detail(nid):
+    nl = Newsletter.query.get_or_404(nid)
+    return render_template('newsletter_detail.html', article=nl)

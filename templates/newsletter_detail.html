@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Newsletter Details{% endblock %}
+{% block content %}
+  <h1>{{ article.headlines }}</h1>
+  <p><strong>Date:</strong> {{ article.date }}</p>
+  <p><strong>Subject:</strong> {{ article.subject }}</p>
+  <hr>
+  <div>
+    {{ article.body }}
+  </div>
+  <p>
+    <a href="{{ url_for('newsletter_page') }}">← Back to Newsletters</a>
+  </p>
+{% endblock %}

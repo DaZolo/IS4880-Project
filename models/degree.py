@@ -1,5 +1,3 @@
-# File: models/degree.py
-
 from models.db import db
 
 class Degree(db.Model):

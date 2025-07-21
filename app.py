@@ -1,12 +1,5 @@
-# File: app.py
-import os
-import sys
-import time
+import os, sys
 from datetime import datetime, timedelta
-
-# Allow this script (running as __main__) to be imported as "app" by your models
-sys.modules['app'] = sys.modules[__name__]
-
 from flask import (
     Flask, render_template, request, redirect,
     url_for, flash, session, abort, jsonify
@@ -15,47 +8,34 @@ from flask_login import (
     LoginManager, login_user, logout_user,
     login_required, current_user
 )
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 
-# Initialize Flask app
-app = Flask(__name__)
+sys.modules['app'] = sys.modules[__name__]
 
-# Configuration
+app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'supersecretkey')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL',
     'mysql+pymysql://alumni_user:StrongPassword!@localhost/alumni_db'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Security settings for session cookies
-app.config['SESSION_COOKIE_SECURE']   = True   # HTTPS only in production
+app.config['SESSION_COOKIE_SECURE']   = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-
-# File upload config
-app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'images')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-# Session timeout (30 minutes of inactivity)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
-# Initialize DB & CSRF
 from models.db import db
 db.init_app(app)
 csrf = CSRFProtect(app)
 app.jinja_env.globals['csrf_token'] = generate_csrf
 
-# Flask-Login
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Load user by ID for Flask-Login."""
     from models.user import User
     try:
         return User.query.get(int(user_id))
@@ -63,7 +43,6 @@ def load_user(user_id):
         return None
 
 def admin_required(func):
-    """Decorator to restrict routes to admin users only."""
     from functools import wraps
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -74,7 +53,6 @@ def admin_required(func):
 
 @app.before_request
 def make_session_permanent():
-    """Refresh session timeout; logout if inactive too long."""
     session.permanent = True
     if current_user.is_authenticated:
         last_active = session.get('last_active')
@@ -93,14 +71,12 @@ def make_session_permanent():
 
 @app.route('/', methods=['GET'])
 def home():
-    """Root → login or alumni directory."""
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
     return redirect(url_for('alumni_directory'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Login form and authentication."""
     from models.user import User
 
     if request.method == 'POST':
@@ -112,7 +88,6 @@ def login():
             if username.isdigit():
                 user = User.query.get(int(username))
             if not user:
-                # match by first or last name
                 user = User.query.filter(
                     (User.fName == username) |
                     (User.lName == username)
@@ -132,13 +107,73 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    """Log out current user."""
     logout_user()
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
-# Register all models & their routes
+@app.route('/api/reports/alumni')
+@login_required
+@admin_required
+def api_alumni():
+    from sqlalchemy import extract
+    from models.alumni import Alumni
+    from models.degree import Degree
+
+    name    = request.args.get('name', '').strip()
+    year_f  = request.args.get('yearFrom', '').strip()
+    year_t  = request.args.get('yearTo', '').strip()
+    major   = request.args.get('major', '').strip()
+    page    = request.args.get('page', 1, type=int)
+    per_pg  = request.args.get('per_page', 10, type=int)
+
+    query = Alumni.query
+
+    if name:
+        query = query.filter(
+            (Alumni.fName.ilike(f'%{name}%')) |
+            (Alumni.lName.ilike(f'%{name}%'))
+        )
+    if year_f:
+        try:
+            yf = int(year_f)
+            query = query.filter(extract('year', Degree.graduationDT) >= yf)
+        except ValueError:
+            pass
+    if year_t:
+        try:
+            yt = int(year_t)
+            query = query.filter(extract('year', Degree.graduationDT) <= yt)
+        except ValueError:
+            pass
+    if major:
+        query = query.filter(
+            Alumni.degrees.any(Degree.major.ilike(f'%{major}%'))
+        )
+
+    query = query.order_by(Alumni.lName.asc(), Alumni.fName.asc())
+    pagination = query.paginate(page=page, per_page=per_pg, error_out=False)
+
+    alumni_data = []
+    for a in pagination.items:
+        ld = a.latest_degree
+        alumni_data.append({
+            "id": a.alumniID,
+            "firstName": a.fName,
+            "lastName": a.lName,
+            "phone": a.phone,
+            "major": ld.major if ld else None,
+            "gradYear": ld.graduationDT.year if ld else None
+        })
+
+    return jsonify({
+        "page": pagination.page,
+        "pages": pagination.pages,
+        "total": pagination.total,
+        "per_page": pagination.per_page,
+        "alumni": alumni_data
+    })
+
 import models.address
 import models.alumni
 import models.degree

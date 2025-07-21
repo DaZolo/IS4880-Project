@@ -1,28 +1,36 @@
-<!-- templates/donations.html -->
 {% extends 'base.html' %}
 {% block title %}Donations{% endblock %}
 {% block content %}
 <h1>KSU Alumni Donations Dashboard</h1>
 
-<!-- Filter Form -->
 <form method="GET" class="filter-form">
   <label for="start">Date From:</label>
   <input type="date" id="start" name="start" value="{{ start }}">
   <label for="end">to</label>
   <input type="date" id="end" name="end" value="{{ end }}">
+
   <label for="reason">Reason Contains:</label>
   <input type="text" id="reason" name="reason" value="{{ reason_query }}">
+
   <label for="degree">Degree Type:</label>
   <select id="degree" name="degree">
     <option value="" {% if degree_type == "" %}selected{% endif %}>All</option>
-    <option value="Bachelors" {% if degree_type == "Bachelors" %}selected{% endif %}>Bachelors</option>
-    <option value="Masters" {% if degree_type == "Masters" %}selected{% endif %}>Masters</option>
-    <option value="PhD" {% if degree_type == "PhD" %}selected{% endif %}>PhD</option>
+    {% for dt in degree_types %}
+      <option value="{{ dt }}" {% if dt == degree_type %}selected{% endif %}>{{ dt }}</option>
+    {% endfor %}
   </select>
+
   <label for="gradYear">Grad Year:</label>
-  <input type="number" id="gradYear" name="gradYear" value="{{ grad_year }}">
+  <select id="gradYear" name="gradYear">
+    <option value="" {% if grad_year == "" %}selected{% endif %}>All</option>
+    {% for y in graduation_years %}
+      <option value="{{ y }}" {% if y|string == grad_year %}selected{% endif %}>{{ y }}</option>
+    {% endfor %}
+  </select>
+
   <label for="minRetention">Min Retention %:</label>
-  <input type="text" id="minRetention" name="minRetention" value="{{ min_retention }}">
+  <input type="number" step="0.1" id="minRetention" name="minRetention" value="{{ min_retention }}">
+
   <button type="submit">Filter</button>
 </form>
 
@@ -39,7 +47,7 @@
       <th>Grad Year</th>
       <th>Retention Rate</th>
       <th>Avg Donation/Year</th>
-      <th>Total/Year</th>
+      <th>Total Amount</th>
     </tr>
   </thead>
   <tbody>
@@ -47,25 +55,26 @@
       <tr><td colspan="11" style="text-align:center;">No donations found for selected filters.</td></tr>
     {% else %}
       {% for donation in donations %}
-      {% set alum = donation.alumni %}
-      {% set first_deg = alum.degrees[0] if alum.degrees|length > 0 else None %}
-      <tr>
-        <td>{{ donation.donationID }}</td>
-        <td>{{ alum.fName }} {{ alum.lName }}</td>
-        <td>${{ "%.2f"|format(donation.donationAmt) }}</td>
-        <td>{{ donation.donationDT }}</td>
-        <td>{{ donation.reason }}</td>
-        <td>{{ donation.description }}</td>
-        <td>{% if first_deg %}{{ first_deg.degreeType }}{% endif %}</td>
-        <td>{% if first_deg %}{{ first_deg.graduationDT.year }}{% endif %}</td>
-        <td>{{ retention_map.get(donation.alumniID, 0)|round(1) }}%</td>
-        <td>${{ avg_map.get(donation.alumniID, 0)|round(2) }}</td>
-        <td>${{ total_map.get(donation.alumniID, 0)|round(2) }}</td>
-      </tr>
+        {% set alum = donation.alumni %}
+        {% set first_deg = alum.degrees[0] if alum.degrees|length > 0 else None %}
+        <tr>
+          <td>{{ donation.donationID }}</td>
+          <td>{{ alum.fName }} {{ alum.lName }}</td>
+          <td>${{ '%.2f'|format(donation.donationAmt) }}</td>
+          <td>{{ donation.donationDT }}</td>
+          <td>{{ donation.reason }}</td>
+          <td>{{ donation.description }}</td>
+          <td>{% if first_deg %}{{ first_deg.major }}{% endif %}</td>
+          <td>{% if first_deg %}{{ first_deg.graduationDT.year }}{% endif %}</td>
+          <td>{{ retention_map.get(donation.alumniID, 0)|round(1) }}%</td>
+          <td>${{ avg_map.get(donation.alumniID, 0)|round(2) }}</td>
+          <td>${{ total_map.get(donation.alumniID, 0)|round(2) }}</td>
+        </tr>
       {% endfor %}
     {% endif %}
   </tbody>
 </table>
+
 {% if total_pages > 1 %}
 <div class="pagination">
   Page {{ page }} of {{ total_pages }}:
@@ -73,7 +82,15 @@
     {% if p == page %}
       <strong>{{ p }}</strong>
     {% else %}
-      <a href="?page={{ p }}{% if start %}&amp;start={{ start }}{% endif %}{% if end %}&amp;end={{ end }}{% endif %}{% if reason_query %}&amp;reason={{ reason_query }}{% endif %}{% if degree_type %}&amp;degree={{ degree_type }}{% endif %}{% if grad_year %}&amp;gradYear={{ grad_year }}{% endif %}{% if min_retention %}&amp;minRetention={{ min_retention }}{% endif %}">{{ p }}</a>
+      <a href="?page={{ p }}
+        {% if start %}&amp;start={{ start }}{% endif %}
+        {% if end %}&amp;end={{ end }}{% endif %}
+        {% if reason_query %}&amp;reason={{ reason_query }}{% endif %}
+        {% if degree_type %}&amp;degree={{ degree_type }}{% endif %}
+        {% if grad_year %}&amp;gradYear={{ grad_year }}{% endif %}
+        {% if min_retention %}&amp;minRetention={{ min_retention }}{% endif %}">
+        {{ p }}
+      </a>
     {% endif %}
   {% endfor %}
 </div>

@@ -1,4 +1,3 @@
-/* Global Styles */
 body {
     background-color: #fff700;
     font-family: Arial, sans-serif;
@@ -64,4 +63,12 @@ table th {
     margin: 0 5px;
     text-decoration: none;
     color: black;
+}
+
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table-responsive {
+    overflow-x: auto;
 }

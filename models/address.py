@@ -1,4 +1,3 @@
-# models/address.py
 from models.db import db
 
 class Address(db.Model):

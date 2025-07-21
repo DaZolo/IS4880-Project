@@ -1,5 +1,3 @@
-<!-- File: templates/alumni.html -->
-
 {% extends 'base.html' %}
 {% block title %}Alumni Directory{% endblock %}
 
@@ -11,10 +9,14 @@
   <input type="text" id="name" name="name" value="{{ name_query }}">
 
   <label for="year_from">Grad Year From:</label>
-  <input type="number" id="year_from" name="year_from" value="{{ year_from }}">
+  <input type="number" id="year_from" name="year_from"
+         value="{{ year_from }}"
+         min="{{ min_year }}" max="{{ current_year }}">
 
   <label for="year_to">to</label>
-  <input type="number" id="year_to" name="year_to" value="{{ year_to }}">
+  <input type="number" id="year_to" name="year_to"
+         value="{{ year_to }}"
+         min="{{ min_year }}" max="{{ current_year }}">
 
   <label for="major">Major:</label>
   <select id="major" name="major">
@@ -27,23 +29,31 @@
   <button type="submit">Search</button>
 </form>
 
-{% if alumni_list %}
+{% if display_list %}
 <table>
   <thead>
     <tr>
-      <th>ID</th><th>First</th><th>Last</th><th>Phone</th>
-      <th>Major</th><th>Grad Year</th>
+      <th>ID</th>
+      <th>First</th>
+      <th>Last</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Address</th>
+      <th>Major</th>
+      <th>Grad Year</th>
     </tr>
   </thead>
   <tbody>
-    {% for a in alumni_list %}
+    {% for entry in display_list %}
     <tr>
-      <td>{{ a.alumniID }}</td>
-      <td>{{ a.fName }}</td>
-      <td>{{ a.lName }}</td>
-      <td>{{ a.phone }}</td>
-      <td>{{ a.degrees[0].major if a.degrees else '' }}</td>
-      <td>{{ a.degrees[0].graduationDT.year if a.degrees else '' }}</td>
+      <td>{{ entry.alumnus.alumniID }}</td>
+      <td>{{ entry.alumnus.fName }}</td>
+      <td>{{ entry.alumnus.lName }}</td>
+      <td>{{ entry.email }}</td>
+      <td>{{ entry.alumnus.phone }}</td>
+      <td>{{ entry.address }}</td>
+      <td>{{ entry.major }}</td>
+      <td>{{ entry.year }}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -55,14 +65,13 @@
     {% if p == pagination.page %}
       <span class="current">{{ p }}</span>
     {% else %}
-      <a
-        href="{{ url_for('alumni_directory',
-                         page=p,
-                         name=name_query,
-                         year_from=year_from,
-                         year_to=year_to,
-                         major=major_query) }}"
-      >{{ p }}</a>
+      <a href="{{ url_for('alumni_directory',
+                           sort=sort_by,
+                           page=p,
+                           name=name_query,
+                           year_from=year_from,
+                           year_to=year_to,
+                           major=major_query) }}">{{ p }}</a>
     {% endif %}
   {% endfor %}
 </nav>

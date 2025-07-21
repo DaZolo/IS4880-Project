@@ -25,7 +25,7 @@
 3. **Install Python dependencies**
 
    ```bat
-   pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    ```
 
 4. **Start the Flask server**
@@ -33,7 +33,8 @@
    ```bat
    python app.py
    ```
-
+   (Ensure the command prompt is opened in the folder of the project.)
+   
 5. **Open in your browser**
    Go to:
 

@@ -2,35 +2,28 @@ import pandas as pd
 import pymysql
 from werkzeug.security import generate_password_hash
 
-# Database configuration - update as needed
 DB_HOST = 'localhost'
 DB_USER = 'alumni_user'
 DB_PASSWORD = 'StrongPassword!'
 DB_NAME = 'alumni_db'
 
-# Excel file path (ensure data.xlsx is in the same directory or provide full path)
 EXCEL_FILE = 'data.xlsx'
 
-# Connect to MySQL
 conn = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_NAME)
 cur = conn.cursor()
 
-# Helper function to convert values for SQL (None for NaN)
 def sql_val(val):
     if pd.isna(val):
         return None
-    # If value is a pandas Timestamp, convert to date or datetime string
     if hasattr(val, 'to_pydatetime'):
         val = val.to_pydatetime()
     if hasattr(val, 'date') and not isinstance(val, str):
-        # If it's a datetime or date object, use YYYY-MM-DD format
         try:
             return val.strftime('%Y-%m-%d')
         except:
             return val
     return val
 
-# Load data from Excel
 print("Reading Excel data...")
 
 alumni_df = pd.read_excel(EXCEL_FILE, sheet_name='alumni')
@@ -41,7 +34,6 @@ degree_df = pd.read_excel(EXCEL_FILE, sheet_name='degree')
 donations_df = pd.read_excel(EXCEL_FILE, sheet_name='donations')
 user_df = pd.read_excel(EXCEL_FILE, sheet_name='user')
 
-# Insert Alumni with duplicate handling
 print("Inserting alumni...")
 for _, row in alumni_df.iterrows():
     vals = (
@@ -66,7 +58,6 @@ for _, row in alumni_df.iterrows():
     )
 conn.commit()
 
-# Insert Addresses with duplicate handling
 print("Inserting addresses...")
 for _, row in address_df.iterrows():
     vals = (
@@ -80,7 +71,6 @@ for _, row in address_df.iterrows():
     )
 conn.commit()
 
-# Insert Employment records with duplicate handling
 print("Inserting employment records...")
 for _, row in employment_df.iterrows():
     vals = (
@@ -95,7 +85,6 @@ for _, row in employment_df.iterrows():
     )
 conn.commit()
 
-# Insert Skillsets with duplicate handling
 print("Inserting skillsets...")
 for _, row in skillset_df.iterrows():
     vals = (
@@ -108,7 +97,6 @@ for _, row in skillset_df.iterrows():
     )
 conn.commit()
 
-# Insert Degrees with duplicate handling
 print("Inserting degrees...")
 for _, row in degree_df.iterrows():
     vals = (
@@ -122,7 +110,6 @@ for _, row in degree_df.iterrows():
     )
 conn.commit()
 
-# Insert Donations with duplicate handling
 print("Inserting donations...")
 for _, row in donations_df.iterrows():
     vals = (
@@ -135,7 +122,6 @@ for _, row in donations_df.iterrows():
     )
 conn.commit()
 
-# Insert Users with duplicate handling
 print("Inserting users...")
 for _, row in user_df.iterrows():
     raw_password = str(row['password'])
@@ -152,7 +138,6 @@ for _, row in user_df.iterrows():
     )
 conn.commit()
 
-# Insert Engagement records (if any in Excel, otherwise skip) with duplicate handling
 if 'engagement' in pd.ExcelFile(EXCEL_FILE).sheet_names:
     engagement_df = pd.read_excel(EXCEL_FILE, sheet_name='engagement')
     print("Inserting engagement records...")

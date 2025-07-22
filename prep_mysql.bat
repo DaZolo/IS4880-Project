@@ -1,18 +1,6 @@
 @ECHO OFF
 SETLOCAL ENABLEEXTENSIONS
 
-REM =============================================================================
-REM  prep_mysql.bat
-REM  
-REM  Locates mysql.exe (default MySQL 8.0 install or PATH), prompts for admin
-REM  credentials, then:
-REM    • Creates alumni_db
-REM    • Creates alumni_user@localhost with StrongPassword!
-REM    • Grants privileges
-REM    • Imports schema.sql
-REM =============================================================================
-
-REM ---- 1) Locate mysql.exe ----
 SET "MYSQL_EXE="
 WHERE mysql.exe >NUL 2>&1 && SET "MYSQL_EXE=mysql"
 
@@ -36,7 +24,6 @@ IF NOT DEFINED MYSQL_EXE (
 ECHO Using MySQL client at: %MYSQL_EXE%
 ECHO.
 
-REM ---- 2) Prompt for admin username/password ----
 :ASKUSER
 SET /P "ADMIN_USER=Enter MySQL admin username (e.g., root): "
 IF "%ADMIN_USER%"=="" (
@@ -46,7 +33,6 @@ IF "%ADMIN_USER%"=="" (
 SET /P "ADMIN_PASS=Enter MySQL admin password: "
 ECHO.
 
-REM ---- 3) Create the database ----
 ECHO === Creating database alumni_db ===
 "%MYSQL_EXE%" --user="%ADMIN_USER%" --password="%ADMIN_PASS%" -e "CREATE DATABASE IF NOT EXISTS alumni_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 IF ERRORLEVEL 1 (
@@ -54,7 +40,6 @@ IF ERRORLEVEL 1 (
     GOTO END
 )
 
-REM ---- 4) Create the user ----
 ECHO === Creating user alumni_user@localhost ===
 "%MYSQL_EXE%" --user="%ADMIN_USER%" --password="%ADMIN_PASS%" -e "CREATE USER IF NOT EXISTS 'alumni_user'@'localhost' IDENTIFIED BY 'StrongPassword!';"
 IF ERRORLEVEL 1 (
@@ -62,7 +47,6 @@ IF ERRORLEVEL 1 (
     GOTO END
 )
 
-REM ---- 5) Grant privileges ----
 ECHO === Granting privileges on alumni_db to alumni_user ===
 "%MYSQL_EXE%" --user="%ADMIN_USER%" --password="%ADMIN_PASS%" -e "GRANT ALL ON alumni_db.* TO 'alumni_user'@'localhost'; FLUSH PRIVILEGES;"
 IF ERRORLEVEL 1 (
@@ -70,7 +54,6 @@ IF ERRORLEVEL 1 (
     GOTO END
 )
 
-REM ---- 6) Import schema.sql ----
 IF NOT EXIST "schema.sql" (
     ECHO [ERROR] schema.sql not found in the current directory.
     GOTO END

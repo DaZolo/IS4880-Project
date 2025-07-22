@@ -1,43 +1,37 @@
 
-# Alumni Engagement Platform
+# Team 2 Alumni Engagement Platform
 
 ## Prerequisites
 
 - **Python 3.8+** installed and added to your PATH  
-- **MySQL Server** installed and running  
-- **Git** (optional, for cloning the repo)
+- **MySQL Server 8.0** installed and running  
 
 ## Setup (Windows)
 
-1. **Clone the repository**  
-   ```bat
-   git clone https://github.com/your‑username/alumni‑engagement.git
-   cd alumni‑engagement
-   ```
-
-2. **Initialize the database**
+1. **Initialize the database**
    Run the provided batch script to create the `alumni_db` database and all required tables:
 
    ```bat
    prep_mysql.bat
    ```
 
-3. **Install Python dependencies**
+2. **Install Python dependencies**
 
    ```bat
    python -m pip install -r requirements.txt
    ```
-
-4. **Start the Flask server**
+   (Ensure the command prompt is opened in the folder of the project.)
+   
+3. **Start the server**
 
    ```bat
    python app.py
    ```
    (Ensure the command prompt is opened in the folder of the project.)
    
-5. **Open in your browser**
+4. **Open in your browser**
    Go to:
 
    ```
-   http://localhost:5000/login
+   http://localhost:5000
    ```

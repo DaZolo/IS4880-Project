@@ -9,12 +9,12 @@
 ## Setup (Windows)
 
 1. **Initialize the database**
-   Run the provided batch script to create the `alumni_db` database and all required tables:
 
    ```bat
    prep_mysql.bat
    ```
-
+   (Ensure the command prompt is opened in the folder of the project.)
+   
 2. **Install Python dependencies**
 
    ```bat
@@ -22,14 +22,21 @@
    ```
    (Ensure the command prompt is opened in the folder of the project.)
    
-3. **Start the server**
+3. **Seed the data**
+
+   ```bat
+   python seed_data.py
+   ```
+   (Ensure the command prompt is opened in the folder of the project.)
+   
+4. **Start the server**
 
    ```bat
    python app.py
    ```
    (Ensure the command prompt is opened in the folder of the project.)
    
-4. **Open in your browser**
+5. **Open in your browser**
    Go to:
 
    ```
